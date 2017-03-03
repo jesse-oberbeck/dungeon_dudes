@@ -1,4 +1,4 @@
-import random
+import random, sys
 
 def roll_dice(num_die):
     dice = []
@@ -26,11 +26,11 @@ def combat(attacker, defender):
     else:
         print("Defended!\n")
 
-    if defender.hp == 0 and isinstance(defender, Hero):
+    if defender.hp <= 0 and isinstance(defender, Hero):
         print("You Died.\n")
-        return 1
+        sys.exit(0)
 
-    elif defender.hp == 0:
+    elif defender.hp <= 0:
         print("Victory Achieved.\n")
         return 2
 
@@ -39,19 +39,22 @@ class Hero():
     def __init__(self):
         self.die = 3
         self.hp = 10
+        self.bag_of_holding = ["Air,"]
 
 class Monster():
-    types = {"rat": 1, "bat": 1, "ghoul": 2, "zombie": 2, "bandit": 2, "golem": 3}
+    types = {"rat": 1, "bat": 1, "ghoul": 2, "zombie": 2, "bandit": 2,
+             "golem": 3}
     def __init__(self):
         self.type = random.choice(   list(self.types.keys())   )
         self.hp = self.types[self.type]
+        #print("STARTING HEALTH:", self.hp)
         self.die = random.randrange(1, 3)
         
 class Room():
     types = {"corridor": 1, "kitchen": 2, "dungeon": 5, "hold": 10}
     def __init__(self):
         self.type = random.choice(   list(self.types.keys())   )
-        print(self.type)
+        #print(self.type)
         self.monsters = [Monster() for monster in range(random.randint(1, self.types[self.type]))]
 
 class Dungeon():
@@ -59,32 +62,49 @@ class Dungeon():
         num_rooms = random.randrange(6, 10)
         self.rooms = [Room() for room in range(num_rooms)]
 
-def move(dungeon):
-    dungeon.rooms.pop(0)
+def move(hero, dungeon):
+    treasures = ["Eye of the Tiger,", "Sword of Omens,", "Gold,", "Wall Chicken,"]
+    if not dungeon.rooms[0].monsters:
+        dungeon.rooms.pop(0)
+        if random.randrange(1, 3) == 2:
+            hero.bag_of_holding.append(random.choice(treasures))
+        #print("FIRST MONSTER AFTER MOVING:")
+        if not dungeon.rooms:
+                print("YOU'VE WON!")
+                sys.exit(0)
+        print("FOE:",dungeon.rooms[0].monsters[0].type, "HP:", dungeon.rooms[0].monsters[0].hp)
+    else:
+        print("There are still monsters here...")
 
 def printInventory(hero, ignore):
-    pass
+    print("Inventory:", *hero.bag_of_holding)
 
 def heroHP(character, ignore):
-    print(character.hp)
+    print("Your HP:", character.hp)
 
 def foeHP(ignore, foe):
-    print(foe.hp)
+    print("Enemy HP:",foe.hp)
 
 def menu(hero, foe, dungeon):
-    options = dict([(str('1'), printInventory), (str('2'), move), (str('3'), heroHP), (str('4'), foeHP), (str('5'), combat)])
+    options = dict([(str('1'), printInventory), (str('2'), move), (str('3'),
+                     heroHP), (str('4'), foeHP), (str('5'), combat)])
     print("1. Check inventory.")
-    print("2. Next room.")
+    print("2. Next room. (Note: You will be attacked and not move if monsters remain.)")
     print("3. Check HP.")
     print("4. Check enemy HP.")
     print("5. Attack.")
     selection = input(">>: ")
+    print("")
+    if selection not in options.keys():
+        selection = 0
+        menu(hero, foe, dungeon)
     if selection == str('2'):
-        move(dungeon)
+        move(hero, dungeon)
+    elif selection == str('5'):
+        options[selection](hero, foe)
     else:
         options[selection](hero, foe)
-
-
+        menu(hero, foe, dungeon)
 
 def game(hero, dungeon):
     foe = dungeon.rooms[0].monsters[0]
@@ -94,7 +114,8 @@ def game(hero, dungeon):
             print("Room is empty...")
             menu(hero, foe, dungeon)
         elif order == 0:
-            print("FOE HP: ", foe.hp)
+            foe = dungeon.rooms[0].monsters[0]
+            print("FOE:",foe.type, "HP:", foe.hp)
             print(foe.type, "attacks!")
             combat(foe, hero)
             menu(hero, foe, dungeon)
@@ -105,15 +126,13 @@ def game(hero, dungeon):
             else:
                 print(foe.type, "attacks!")
                 combat(foe, hero)
-#            if not dungeon.rooms[0].monsters:
-#                print("pop room")
-#                dungeon.rooms.pop(0)
             if not dungeon.rooms:
                 print("YOU'VE WON!")
                 return
 
         elif order == 1:
-            print("FOE HP: ", foe.hp)
+            foe = dungeon.rooms[0].monsters[0]
+            print("FOE:",foe.type, "HP:", foe.hp)
             menu(hero, foe, dungeon)
             if foe.hp == 0:
                 dungeon.rooms[0].monsters.pop(0)
@@ -122,35 +141,12 @@ def game(hero, dungeon):
             else:
                 print(foe.type, "attacks!")
                 combat(foe, hero)
-#            if not dungeon.rooms[0].monsters:
-#                print("pop room")
-#                dungeon.rooms.pop(0)
             if not dungeon.rooms:
                 print("YOU'VE WON!")
                 return
 
 
-#player = Hero()
-#testMon = Monster()
-#print(testMon.type, testMon.hp)
-#check = combat(player, testMon)
-#if check == 1:
-#    return
-#if check == 2:
-
-#dungeon = Dungeon()
-#room = dungeon.rooms[0]
-#for monster in room.monsters:
-#    print(monster.type)
-#menu(player, room.monsters[0])
-
 player = Hero()
 dungeon = Dungeon()
 game(player, dungeon)
-
-
-
-
-
-
 
