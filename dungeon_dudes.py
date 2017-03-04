@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import random, sys
 
 def roll_dice(num_die):
@@ -17,6 +18,8 @@ def initiative(hero, foe):
 def combat(attacker, defender):
     attacker_max = max(roll_dice(attacker.die))
     defender_max = max(roll_dice(defender.die))
+    if defender.hp == 0:
+        return
     if attacker_max > defender_max:
         defender.hp -= 1
         print("Attack hits!\n")
@@ -42,8 +45,8 @@ class Hero():
         self.bag_of_holding = ["Air,"]
 
 class Monster():
-    types = {"rat": 1, "bat": 1, "ghoul": 2, "zombie": 2, "bandit": 2,
-             "golem": 3}
+    types = {"Rat": 1, "Bat": 1, "Ghoul": 2, "Zombie": 2, "Bandit": 2,
+             "Golem": 3}
     def __init__(self):
         self.type = random.choice(   list(self.types.keys())   )
         self.hp = self.types[self.type]
@@ -51,7 +54,7 @@ class Monster():
         self.die = random.randrange(1, 3)
         
 class Room():
-    types = {"corridor": 1, "kitchen": 2, "dungeon": 5, "hold": 10}
+    types = {"corridor": 1, "kitchen": 2, "armory": 5, "storeroom": 10}
     def __init__(self):
         self.type = random.choice(   list(self.types.keys())   )
         #print(self.type)
@@ -67,12 +70,13 @@ def move(hero, dungeon):
     if not dungeon.rooms[0].monsters:
         dungeon.rooms.pop(0)
         if random.randrange(1, 3) == 2:
-            hero.bag_of_holding.append(random.choice(treasures))
-        #print("FIRST MONSTER AFTER MOVING:")
+            found = random.choice(treasures)
+            hero.bag_of_holding.append(found)
+            print("You find", found, "\nand put it in your bag of holding.")
         if not dungeon.rooms:
                 print("YOU'VE WON!")
                 sys.exit(0)
-        print("FOE:",dungeon.rooms[0].monsters[0].type, "HP:", dungeon.rooms[0].monsters[0].hp)
+        print("You have entered a", dungeon.rooms[0].type)
     else:
         print("There are still monsters here...")
 
@@ -98,7 +102,7 @@ def menu(hero, foe, dungeon):
     if selection not in options.keys():
         selection = 0
         menu(hero, foe, dungeon)
-    if selection == str('2'):
+    elif selection == str('2'):
         move(hero, dungeon)
     elif selection == str('5'):
         options[selection](hero, foe)
@@ -115,7 +119,7 @@ def game(hero, dungeon):
             menu(hero, foe, dungeon)
         elif order == 0:
             foe = dungeon.rooms[0].monsters[0]
-            print("FOE:",foe.type, "HP:", foe.hp)
+            print("FOE:",foe.type)
             print(foe.type, "attacks!")
             combat(foe, hero)
             menu(hero, foe, dungeon)
@@ -132,7 +136,7 @@ def game(hero, dungeon):
 
         elif order == 1:
             foe = dungeon.rooms[0].monsters[0]
-            print("FOE:",foe.type, "HP:", foe.hp)
+            print("FOE:",foe.type)
             menu(hero, foe, dungeon)
             if foe.hp == 0:
                 dungeon.rooms[0].monsters.pop(0)
@@ -148,5 +152,10 @@ def game(hero, dungeon):
 
 player = Hero()
 dungeon = Dungeon()
+print("\n\n\tYou find yourself in a dungeon. It is dark, damp,\n\
+        and the bricks, worn smooth, make you think it's very old.\n\
+        You have no idea how you got to this place. In fact, your\n\
+        memory is generally hazy. Your head hurts.\n\
+        And you hear strange noises...\n\n")
 game(player, dungeon)
 
