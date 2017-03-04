@@ -4,6 +4,9 @@ import sys
 
 
 def roll_dice(num_die):
+    # Takes a number, and returns that number of d6,
+    # each having been rolled.
+
     dice = []
     for die in range(num_die):
         dice.append(random.randrange(1, 6))
@@ -11,6 +14,8 @@ def roll_dice(num_die):
 
 
 def initiative(hero, foe):
+    # Rolls dice to see who is first in the attack order.
+
     hero_max = max(roll_dice(hero.die))
     foe_max = max(roll_dice(foe.die))
     if hero_max >= foe_max:
@@ -20,6 +25,10 @@ def initiative(hero, foe):
 
 
 def combat(attacker, defender):
+    # Rolls the appropriate number of dice for each character,
+    # and determines based on the highest individual die for each
+    # whether the attack has hit or been defended against.
+
     attacker_max = max(roll_dice(attacker.die))
     defender_max = max(roll_dice(defender.die))
     if defender.hp == 0:
@@ -44,6 +53,8 @@ def combat(attacker, defender):
 
 class Hero():
 
+    # Represents a player. Contains die count, HP, and inventory.
+
     def __init__(self):
         self.die = 3
         self.hp = 10
@@ -51,6 +62,9 @@ class Hero():
 
 
 class Monster():
+
+    # Represents enemies. Contains type, health, and die count.
+
     types = {"Rat": 1, "Bat": 1, "Ghoul": 2, "Zombie": 2, "Bandit": 2,
              "Golem": 3}
 
@@ -61,7 +75,11 @@ class Monster():
 
 
 class Room():
-    types = {"corridor": 1, "kitchen": 2, "armory": 5, "storeroom": 10}
+
+    # Each represents an area of the dungeon. Contains type of room,
+    # and an appropriate number of monsters for the room size.
+
+    types = {"corridor": 1, "kitchen": 2, "armory": 5, "great hall": 10}
 
     def __init__(self):
         self.type = random.choice(list(self.types.keys()))
@@ -70,14 +88,22 @@ class Room():
 
 
 class Dungeon():
+
+    # Represents the dungeon over-all, or at least a branch of it.
+
     def __init__(self):
         num_rooms = random.randrange(6, 10)
         self.rooms = [Room() for room in range(num_rooms)]
 
 
 def move(hero, dungeon):
+
+    # Allows the player to move to the next room, given that it
+    # is empty. If not empty, the player will not move and will
+    # provoke a defendable attack of opportunity.
+
     treasures = ["Eye of the Tiger,", "Sword of Omens,", "Gold,",
-                 "Wall Chicken,", "Old Toby,", "Old Greg,"]
+                 "Wall Chicken,", "Old Toby,", "Old Greg,", "Potion,"]
     if not dungeon.rooms[0].monsters:
         dungeon.rooms.pop(0)
         if random.randrange(1, 3) == 2:
@@ -93,24 +119,38 @@ def move(hero, dungeon):
 
 
 def printInventory(hero, ignore):
+
+    # Prints hero/player inventory.
+
     print("Inventory:", *hero.bag_of_holding)
 
 
 def heroHP(character, ignore):
+
+    # Prints hero/player health.
+
     print("Your HP:", character.hp)
 
 
 def foeHP(ignore, foe):
+
+    # Prints enemy/monster health.
+
     print("Enemy HP:", foe.hp)
 
 
 def menu(hero, foe, dungeon):
+
+    # Presents the player with a list of options on every
+    # turn, and executes the selected option. Combat causes
+    # the round to continue, completing the players' turn,
+    # checking health and inventory do not.
+
     options = dict([(str('1'), printInventory), (str('2'), move),
                     (str('3'), heroHP), (str('4'), foeHP), (str('5'), combat),
                     (str('6'), combat)])
     print("1. Check inventory.")
-    print("2. Next room. (Note: You will be attacked and\
-          not move if monsters remain.)")
+    print("2. Next room. (Note: Allows attacks of opportunity.)")
     print("3. Check HP.")
     print("4. Check enemy HP.")
     print("5. Attack.")
@@ -140,13 +180,18 @@ def menu(hero, foe, dungeon):
 
 
 def game(hero, dungeon):
+
+    # Main operating loop for the game. Executes an initiative
+    # roll for each new monster, and handles each turn in accordance
+    # with the result of that roll.
+
     foe = dungeon.rooms[0].monsters[0]
     order = initiative(hero, foe)
     while(1):
         if not dungeon.rooms[0].monsters:
             print("Room is empty...")
             menu(hero, foe, dungeon)
-        elif order == 0:
+        elif order == 0:  # Enemy won initiative.
             foe = dungeon.rooms[0].monsters[0]
             print("FOE:", foe.type)
             print(foe.type, "attacks!")
@@ -163,7 +208,7 @@ def game(hero, dungeon):
                 print("YOU'VE WON!")
                 return
 
-        elif order == 1:
+        elif order == 1:  # Player won initiative.
             foe = dungeon.rooms[0].monsters[0]
             print("FOE:", foe.type)
             menu(hero, foe, dungeon)
@@ -178,11 +223,14 @@ def game(hero, dungeon):
                 print("YOU'VE WON!")
                 return
 
-player = Hero()
-dungeon = Dungeon()
-print("\n\n\tYou find yourself in a dungeon. It is dark, damp,\n\
-        and the bricks, worn smooth, make you think it's very old.\n\
-        You have no idea how you got to this place. In fact, your\n\
-        memory is generally hazy. Your head hurts.\n\
-        And you hear strange noises...\n\n")
-game(player, dungeon)
+
+if __name__ == "__main__":
+    player = Hero()
+    dungeon = Dungeon()
+    print("\n\n\tYou find yourself in a dungeon. It is dark, damp,\n\
+            and the bricks, worn smooth, make you think it's very old.\n\
+            You have no idea how you got to this place. In fact, your\n\
+            memory is generally hazy. Your head hurts.\n\
+            And you hear strange noises...\n\n\
+            You are approached my a monster!\n\n")
+    game(player, dungeon)
